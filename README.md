@@ -21,6 +21,7 @@ We provide two overloads of the bulk import API - one which accepts a list of JS
             bool enableUpsert = false,
             bool disableAutomaticIdGeneration = true,
             int? maxConcurrencyPerPartitionKeyRange = null,
+            int? maxInMemorySortingBatchSize = null,
             CancellationToken cancellationToken = default(CancellationToken));
 ```
 
@@ -31,6 +32,7 @@ We provide two overloads of the bulk import API - one which accepts a list of JS
             bool enableUpsert = false,
             bool disableAutomaticIdGeneration = true,
             int? maxConcurrencyPerPartitionKeyRange = null,
+            int? maxInMemorySortingBatchSize = null,
             CancellationToken cancellationToken = default(CancellationToken));
 ```
 
@@ -38,6 +40,7 @@ We provide two overloads of the bulk import API - one which accepts a list of JS
 * *enableUpsert* : A flag to enable upsert of the documents, default value is false.
 * *disableAutomaticIdGeneration* : A flag to disable automatic generation of ids if absent in the docuement.
 * *maxConcurrencyPerPartitionKeyRange* : The maximum degree of concurrency per partition key range, setting to null will cause library to use default value of 20.
+* *maxInMemorySortingBatchSize* : The maximum number of documents pulled from the document enumerator passed to the API call in each stage for in-memory pre-processing sorting phase prior to bulk importing, setting to null will cause library to use default value of min(documents.count, 1000000).
 * *cancellationToken* : The cancellation token to gracefully exit bulk import.
 
 ##### Bulk import response object definition
@@ -46,13 +49,13 @@ The result of the bulk import API call contains the following attributes:
 * *NumberOfDocumentsImported* (long) : The total number of documents which were successfully imported out of the documents supplied to the bulk import API call.
 * *TotalRequestUnitsConsumed* (double) : The total request units (RU) consumed by the bulk import API call.
 * *TotalTimeTaken* (TimeSpan) : The total time taken by the bulk import API call to complete.
-* *BadInputDocuments* (List\<object\>) : The list of bad-format documents which were not successfully imported in the bulk import API call. User needs to fix the documents - potential reasons could be null document id, invalid JSON, etc.
+* *BadInputDocuments* (List\<object\>) : The list of bad-format documents which were not successfully imported in the bulk import API call. User needs to fix the documents - potential reasons could be invalid document id, invalid JSON format, etc.
 
 #### Getting started
 
 You can find a sample application program consuming the bulk import API [here](BulkImportSample\BulkImportSample\Program.cs) - which generates random documents to be then bulk imported into a Cosmos DB collecition. You can configure the application settings in *appSettings* [here](BulkImportSample\BulkImportSample\App.config).
 
-### Couple of other pointers
+### Additional pointers
 
 * For best performance, run your application from an Azure VM in the same region as your Cosmos DB account write region.
 * It is advised to instantiate a single *BulkExecutor* object for the entirety of the application corresponding to a specific Cosmos DB collection.

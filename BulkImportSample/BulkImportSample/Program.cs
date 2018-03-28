@@ -8,12 +8,9 @@ namespace BulkImportSample
     using System.Configuration;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.IO;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
 
-    using Newtonsoft.Json;
     using Microsoft.Azure.Documents;
     using Microsoft.Azure.Documents.Client;
     using Microsoft.Azure.CosmosDB.BulkExecutor;
@@ -117,9 +114,6 @@ namespace BulkImportSample
             // Creating documents with simple partition key here.
             string partitionKeyProperty = dataCollection.PartitionKey.Paths[0].Replace("/", "");
 
-            string sampleDocument = File.ReadAllText("../../" + ConfigurationManager.AppSettings["SampleDocumentTemplateFile"]);
-            Dictionary<string, object> sampleDictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(sampleDocument);
-
             long numberOfDocumentsToGenerate = long.Parse(ConfigurationManager.AppSettings["NumberOfDocumentsToImport"]);
             int numberOfBatches = int.Parse(ConfigurationManager.AppSettings["NumberOfBatches"]);
             long numberOfDocumentsPerBatch = (long)Math.Floor(((double)numberOfDocumentsToGenerate) / numberOfBatches);
@@ -137,22 +131,21 @@ namespace BulkImportSample
 
             for (int i = 0; i < numberOfBatches; i++)
             {
-                // Generate documents to import.
+                // Generate JSON-serialized documents to import.
 
-                List<object> documentsToImportInBatch = new List<object>();
+                List<string> documentsToImportInBatch = new List<string>();
                 long prefix = i * numberOfDocumentsPerBatch;
 
                 Trace.TraceInformation(String.Format("Generating {0} documents to import for batch {1}", numberOfDocumentsPerBatch, i));
                 for (int j = 0; j < numberOfDocumentsPerBatch; j++)
                 {
                     string partitionKeyValue = (prefix + j).ToString();
-                    sampleDictionary["id"] = partitionKeyValue + Guid.NewGuid().ToString();
-                    sampleDictionary[partitionKeyProperty] = partitionKeyValue;
+                    string id = partitionKeyValue + Guid.NewGuid().ToString();
 
-                    documentsToImportInBatch.Add(sampleDictionary.ToDictionary(entry => entry.Key, entry => entry.Value));
+                    documentsToImportInBatch.Add(Utils.GenerateRandomDocumentString(id, partitionKeyProperty, partitionKeyValue));
                 }
 
-                // Invoke bulk import (deserialized docs) API.
+                // Invoke bulk import API.
 
                 var tasks = new List<Task>();
 
@@ -165,9 +158,10 @@ namespace BulkImportSample
                         {
                             bulkImportResponse = await bulkExecutor.BulkImportAsync(
                                 documents: documentsToImportInBatch,
-                                enableUpsert: false,
+                                enableUpsert: true,
                                 disableAutomaticIdGeneration: true,
                                 maxConcurrencyPerPartitionKeyRange: null,
+                                maxInMemorySortingBatchSize: null,
                                 cancellationToken: token);
                         }
                         catch (DocumentClientException de)
@@ -184,7 +178,7 @@ namespace BulkImportSample
 
                     Trace.WriteLine(String.Format("\nSummary for batch {0}:", i));
                     Trace.WriteLine("--------------------------------------------------------------------- ");
-                    Trace.WriteLine(String.Format("Inserted {0} docs @ {1} writes/s, {2} RU/s in {3} sec)",
+                    Trace.WriteLine(String.Format("Inserted {0} docs @ {1} writes/s, {2} RU/s in {3} sec",
                         bulkImportResponse.NumberOfDocumentsImported,
                         Math.Round(bulkImportResponse.NumberOfDocumentsImported / bulkImportResponse.TotalTimeTaken.TotalSeconds),
                         Math.Round(bulkImportResponse.TotalRequestUnitsConsumed / bulkImportResponse.TotalTimeTaken.TotalSeconds),
@@ -199,6 +193,7 @@ namespace BulkImportSample
                 },
                 token));
 
+                /*
                 tasks.Add(Task.Run(() =>
                 {
                     char ch = Console.ReadKey(true).KeyChar;
@@ -208,13 +203,14 @@ namespace BulkImportSample
                         Trace.WriteLine("\nTask cancellation requested.");
                     }
                 }));
+                */
 
                 await Task.WhenAll(tasks);
             }
 
             Trace.WriteLine("Overall summary:");
             Trace.WriteLine("--------------------------------------------------------------------- ");
-            Trace.WriteLine(String.Format("Inserted {0} docs @ {1} writes/s, {2} RU/s in {3} sec)",
+            Trace.WriteLine(String.Format("Inserted {0} docs @ {1} writes/s, {2} RU/s in {3} sec",
                 totalNumberOfDocumentsInserted,
                 Math.Round(totalNumberOfDocumentsInserted / totalTimeTakenSec),
                 Math.Round(totalRequestUnitsConsumed / totalTimeTakenSec),
