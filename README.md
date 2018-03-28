@@ -53,7 +53,9 @@ The result of the bulk import API call contains the following attributes:
 
 #### Getting started
 
-You can find a sample application program consuming the bulk import API [here](BulkImportSample\BulkImportSample\Program.cs) - which generates random documents to be then bulk imported into a Cosmos DB collecition. You can configure the application settings in *appSettings* [here](BulkImportSample\BulkImportSample\App.config).
+You can find a sample application program consuming the bulk import API [here](https://github.com/Azure/azure-cosmosdb-bulkexecutor-dotnet-getting-started/blob/master/BulkImportSample/BulkImportSample/Program.cs) - which generates random documents to be then bulk imported into a Cosmos DB collecition. You can configure the application settings in *appSettings* [here](https://github.com/Azure/azure-cosmosdb-bulkexecutor-dotnet-getting-started/blob/master/BulkImportSample/BulkImportSample/App.config).
+
+We are in the process of publicly releasing the BulkExecutor nuget package - until then, you can use the preview version [here](https://github.com/Azure/azure-cosmosdb-bulkexecutor-dotnet-getting-started/tree/master/BulkImportSample/BulkImportSample/NugetPackages).
 
 ### Additional pointers
 
