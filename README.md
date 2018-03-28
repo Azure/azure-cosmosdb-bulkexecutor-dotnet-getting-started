@@ -57,6 +57,13 @@ You can find a sample application program consuming the bulk import API [here](h
 
 We are in the process of publicly releasing the BulkExecutor nuget package - until then, you can use the preview version [here](https://github.com/Azure/azure-cosmosdb-bulkexecutor-dotnet-getting-started/tree/master/BulkImportSample/BulkImportSample/NugetPackages).
 
+#### Performance of this sample
+
+When the given sample application is run on a standard DS16 v3 Azure VM in East US against a Cosmos DB collection in East US with 1 million RU/s allocated througput - with *NumberOfDocumentsToImport* set to 50 million and *NumberOfBatches* set to 50 (in *App.config*) and default parameters for the bulk import API, we observe the following performance:
+```csharp
+Inserted 50000000 docs @ 70096 writes/s, 423581 RU/s in 713.2901232 sec
+```
+
 ### Additional pointers
 
 * For best performance, run your application from an Azure VM in the same region as your Cosmos DB account write region.
