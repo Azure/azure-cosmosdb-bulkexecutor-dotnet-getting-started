@@ -74,12 +74,12 @@ namespace BulkImportSample
                 "    \"" + partitionKeyProperty + "\": \"" + parititonKeyValue + "\",\n" +
                 "    \"Name\": \"TestDoc\",\n" +
                 "    \"description\": \"1.99\",\n" +
-                "    \"segments\": [375,668,6],\n" +
                 "    \"f1\": \"3hrkjh3h4h4h3jk4h\",\n" +
                 "    \"f2\": \"dhfkjdhfhj4434434\",\n" +
                 "    \"f3\": \"nklfjeoirje434344\",\n" +
                 "    \"f4\": \"pjfgdgfhdgfgdhbd6\",\n" +
-                "    \"f5\": \"3434343ghghghgghj\"" +
+                "    \"f5\": \"gyuerehvrerebrhjh\",\n" +
+                "    \"f6\": \"3434343ghghghgghj\"" +
                 "}";
         }
     }
