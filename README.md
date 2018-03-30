@@ -18,7 +18,7 @@ The Azure Cosmos DB BulkExecutor library for .NET acts as an extension library t
 
 </details>
 
-### Bulk Import API
+## Bulk Import API
 
 We provide two overloads of the bulk import API - one which accepts a list of JSON-serialized documents and the other a list of deserialized POCO documents.
 
@@ -44,7 +44,7 @@ We provide two overloads of the bulk import API - one which accepts a list of JS
             CancellationToken cancellationToken = default(CancellationToken));
 ```
 
-#### Configurable parameters
+### Configurable parameters
 
 * *enableUpsert* : A flag to enable upsert of the documents, default value is false.
 * *disableAutomaticIdGeneration* : A flag to disable automatic generation of ids if absent in the docuement.
@@ -52,7 +52,7 @@ We provide two overloads of the bulk import API - one which accepts a list of JS
 * *maxInMemorySortingBatchSize* : The maximum number of documents pulled from the document enumerator passed to the API call in each stage for in-memory pre-processing sorting phase prior to bulk importing, setting to null will cause library to use default value of min(documents.count, 1000000).
 * *cancellationToken* : The cancellation token to gracefully exit bulk import.
 
-#### Bulk import response object definition
+### Bulk import response object definition
 
 The result of the bulk import API call contains the following attributes:
 * *NumberOfDocumentsImported* (long) : The total number of documents which were successfully imported out of the documents supplied to the bulk import API call.
@@ -60,25 +60,57 @@ The result of the bulk import API call contains the following attributes:
 * *TotalTimeTaken* (TimeSpan) : The total time taken by the bulk import API call to complete.
 * *BadInputDocuments* (List\<object\>) : The list of bad-format documents which were not successfully imported in the bulk import API call. User needs to fix the documents returned and retry import. Bad-format documents include documents whose *id* value is not a string (null or any other datatype is considered invalid).
 
-#### Getting started
+### Getting started
 
-You can find a sample application program consuming the bulk import API [here](https://github.com/Azure/azure-cosmosdb-bulkexecutor-dotnet-getting-started/blob/master/BulkImportSample/BulkImportSample/Program.cs) - which generates random documents to be then bulk imported into a Cosmos DB collecition. You can configure the application settings in *appSettings* [here](https://github.com/Azure/azure-cosmosdb-bulkexecutor-dotnet-getting-started/blob/master/BulkImportSample/BulkImportSample/App.config).
+* Initialize DocumentClient set to Direct TCP connection mode
+```csharp
+ConnectionPolicy connectionPolicy = new ConnectionPolicy
+{
+    ConnectionMode = ConnectionMode.Direct,
+    ConnectionProtocol = Protocol.Tcp
+};
+DocumentClient client = new DocumentClient(
+    new Uri(endpointUrl),
+    authorizationKey,
+    connectionPolicy)
+```
+
+* Initialize BulkExecutor
+```csharp
+IBulkExecutor bulkExecutor = new BulkExecutor(client, dataCollection);
+await bulkExecutor.InitializeAsync();
+```
+
+* Call BulkImportAsync
+```csharp
+BulkImportResponse bulkImportResponse = await bulkExecutor.BulkImportAsync(
+    documents: documentsToImportInBatch,
+    enableUpsert: true,
+    disableAutomaticIdGeneration: true,
+    maxConcurrencyPerPartitionKeyRange: null,
+    maxInMemorySortingBatchSize: null,
+    cancellationToken: token);
+```
+
+You can find the complete sample application program consuming the bulk import API [here](https://github.com/Azure/azure-cosmosdb-bulkexecutor-dotnet-getting-started/blob/master/BulkImportSample/BulkImportSample/Program.cs) - which generates random documents to be then bulk imported into a Cosmos DB collecition. You can configure the application settings in *appSettings* [here](https://github.com/Azure/azure-cosmosdb-bulkexecutor-dotnet-getting-started/blob/master/BulkImportSample/BulkImportSample/App.config).
 
 You can download the Microsoft.Azure.CosmosDB.BulkExecutor nuget package from [here](https://github.com/Azure/azure-cosmosdb-bulkexecutor-dotnet-getting-started/tree/master/BulkImportSample/BulkImportSample/NugetPackages).
 
-#### Performance of bulk import sample
+### Performance of bulk import sample
 
 When the given sample application is run on a standard DS16 v3 Azure VM in East US against a Cosmos DB collection in East US with 1 million RU/s allocated througput - with *NumberOfDocumentsToImport* set to **25 million** and *NumberOfBatches* set to **25** (in *App.config*) and default parameters for the bulk import API, we observe the following performance:
 ```csharp
 Inserted 25000000 docs @ 83136 writes/s, 426765 RU/s in 300.7134074 sec
 ```
-#### Client-side API implementation details
+### Client-side API implementation details
 
 When a bulk import API is triggered with a batch of documents, on the client-side, they are first shuffled into buckets corresponding to their target Cosmos DB partition key range. Within each partiton key range bucket, they are broken down into mini-batches - each mini-batch of documents acts as a payload that is committed transactionally
 
 We have built in optimizations for the concurrent execution of these mini-batches both within and across partition key ranges to maximally utilize the allocated collection throughput. We have designed an [AIMD-style congestion control](https://academic.microsoft.com/#/detail/2158700277?FORM=DACADP) mechanism for each Cosmos DB partition key range **to efficiently handle throttling and timeouts**.
 
-### Additional pointers
+------------------------------------------
+
+## Additional pointers
 
 * For best performance, run your application from an Azure VM in the same region as your Cosmos DB account write region.
 * It is advised to instantiate a single *BulkExecutor* object for the entirety of the application corresponding to a specific Cosmos DB collection.
@@ -102,7 +134,8 @@ We have built in optimizations for the concurrent execution of these mini-batche
   </system.diagnostics>
 ```
 
-### Contributing & feedback
+------------------------------------------
+## Contributing & feedback
 
 This project has adopted the [Microsoft Open Source Code of
 Conduct](https://opensource.microsoft.com/codeofconduct/).  For more information
@@ -116,6 +149,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 To give feedback and/or report an issue, open a [GitHub
 Issue](https://help.github.com/articles/creating-an-issue/).
 
-### Other relevant projects
+------------------------------------------
+
+## Other relevant projects
 
 * [Cosmos DB BulkExecutor library for Java](https://github.com/Azure/azure-cosmosdb-bulkexecutor-java-getting-started)
