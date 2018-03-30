@@ -9,10 +9,17 @@ The Azure Cosmos DB BulkExecutor library for .NET acts as an extension library t
 * [Bulk Import API](#bulk-import-api)
   * [Configurable parameters](#bulk-import-configurations)
   * [Bulk import response object definition](#bulk-import-response)
-  * [Getting started](#bulk-import-getting-started)
+  * [Getting started with bulk import](#bulk-import-getting-started)
   * [Performance of bulk import sample](bulk-import-performance)
-  * [Client-side API implementation details](bulk-import-client-side)
-* [Additional pointers](#additional-pointers)
+  * [API implementation details](bulk-import-client-side)
+* [Bulk Update API](#bulk-import-api)
+  * [List of supported field update operations](#field-update-operations)
+  * [Configurable parameters](#bulk-update-configurations)
+  * [Bulk update response object definition](#bulk-update-response)
+  * [Getting started with bulk update](#bulk-update-getting-started)
+  * [Performance of bulk update sample](bulk-update-performance)
+  * [API implementation details](bulk-update-client-side)
+* [Performance tips](#additional-pointers)
 * [Contributing & Feedback](#contributing--feedback)
 * [Other relevant projects](#relevant-projects)
 
@@ -46,8 +53,8 @@ We provide two overloads of the bulk import API - one which accepts a list of JS
 
 ### Configurable parameters
 
-* *enableUpsert* : A flag to enable upsert of the documents, default value is false.
-* *disableAutomaticIdGeneration* : A flag to disable automatic generation of ids if absent in the docuement.
+* *enableUpsert* : A flag to enable upsert of the documents if document with given id already exists - default value is false.
+* *disableAutomaticIdGeneration* : A flag to disable automatic generation of id if absent in the document - default value is true.
 * *maxConcurrencyPerPartitionKeyRange* : The maximum degree of concurrency per partition key range, setting to null will cause library to use default value of 20.
 * *maxInMemorySortingBatchSize* : The maximum number of documents pulled from the document enumerator passed to the API call in each stage for in-memory pre-processing sorting phase prior to bulk importing, setting to null will cause library to use default value of min(documents.count, 1000000).
 * *cancellationToken* : The cancellation token to gracefully exit bulk import.
@@ -57,10 +64,10 @@ We provide two overloads of the bulk import API - one which accepts a list of JS
 The result of the bulk import API call contains the following attributes:
 * *NumberOfDocumentsImported* (long) : The total number of documents which were successfully imported out of the documents supplied to the bulk import API call.
 * *TotalRequestUnitsConsumed* (double) : The total request units (RU) consumed by the bulk import API call.
-* *TotalTimeTaken* (TimeSpan) : The total time taken by the bulk import API call to complete.
+* *TotalTimeTaken* (TimeSpan) : The total time taken by the bulk import API call to complete execution.
 * *BadInputDocuments* (List\<object\>) : The list of bad-format documents which were not successfully imported in the bulk import API call. User needs to fix the documents returned and retry import. Bad-format documents include documents whose *id* value is not a string (null or any other datatype is considered invalid).
 
-### Getting started
+### Getting started with bulk import
 
 * Initialize DocumentClient set to Direct TCP connection mode
 ```csharp
@@ -92,25 +99,196 @@ BulkImportResponse bulkImportResponse = await bulkExecutor.BulkImportAsync(
     cancellationToken: token);
 ```
 
-You can find the complete sample application program consuming the bulk import API [here](https://github.com/Azure/azure-cosmosdb-bulkexecutor-dotnet-getting-started/blob/master/BulkImportSample/BulkImportSample/Program.cs) - which generates random documents to be then bulk imported into a Cosmos DB collecition. You can configure the application settings in *appSettings* [here](https://github.com/Azure/azure-cosmosdb-bulkexecutor-dotnet-getting-started/blob/master/BulkImportSample/BulkImportSample/App.config).
+You can find the complete sample application program consuming the bulk import API [here](https://github.com/Azure/azure-cosmosdb-bulkexecutor-dotnet-getting-started/blob/master/BulkImportSample/BulkImportSample/Program.cs) - which generates random documents to be then bulk imported into an Azure Cosmos DB collection. You can configure the application settings in *appSettings* [here](https://github.com/Azure/azure-cosmosdb-bulkexecutor-dotnet-getting-started/blob/master/BulkImportSample/BulkImportSample/App.config).
 
 You can download the Microsoft.Azure.CosmosDB.BulkExecutor nuget package from [here](https://github.com/Azure/azure-cosmosdb-bulkexecutor-dotnet-getting-started/tree/master/BulkImportSample/BulkImportSample/NugetPackages).
 
 ### Performance of bulk import sample
 
-When the given sample application is run on a standard DS16 v3 Azure VM in East US against a Cosmos DB collection in East US with 1 million RU/s allocated througput - with *NumberOfDocumentsToImport* set to **25 million** and *NumberOfBatches* set to **25** (in *App.config*) and default parameters for the bulk import API, we observe the following performance:
+When the given sample application is run on a standard DS16 v3 Azure VM in East US against a Cosmos DB collection in East US with **1 million RU/s** allocated througput - with *NumberOfDocumentsToImport* set to **25 million** and *NumberOfBatches* set to **25** (in *App.config*) and default parameters for the bulk import API, we observe the following performance:
 ```csharp
 Inserted 25000000 docs @ 83136 writes/s, 426765 RU/s in 300.7134074 sec
 ```
-### Client-side API implementation details
+### API implementation details
 
-When a bulk import API is triggered with a batch of documents, on the client-side, they are first shuffled into buckets corresponding to their target Cosmos DB partition key range. Within each partiton key range bucket, they are broken down into mini-batches - each mini-batch of documents acts as a payload that is committed transactionally
+When a bulk import API is triggered with a batch of documents, on the client-side, they are first shuffled into buckets corresponding to their target Cosmos DB partition key range. Within each partiton key range bucket, they are broken down into mini-batches and each mini-batch of documents acts as a payload that is committed transactionally.
 
 We have built in optimizations for the concurrent execution of these mini-batches both within and across partition key ranges to maximally utilize the allocated collection throughput. We have designed an [AIMD-style congestion control](https://academic.microsoft.com/#/detail/2158700277?FORM=DACADP) mechanism for each Cosmos DB partition key range **to efficiently handle throttling and timeouts**.
 
+These client-side optimizations augment server-side features specific to the BulkExecutor library which together make it possible to maximal consumption of available throughput.
+
 ------------------------------------------
 
-## Additional pointers
+## Bulk Update API
+
+The bulk update (a.k.a patch) API accepts a list of update items - each update item specifies the list of field update operations to be performed on a document identified by an id and parititon key value.
+
+```csharp
+        Task<BulkUpdateResponse> BulkUpdateAsync(
+            IEnumerable<UpdateItem> updateItems,
+            int? maxConcurrencyPerPartitionKeyRange = null,
+            int? maxInMemorySortingBatchSize = null,
+            CancellationToken cancellationToken = default(CancellationToken));
+```
+
+* Definition of UpdateItem
+```csharp
+    class UpdateItem
+    {
+        public string Id { get; private set; }
+
+        public string PartitionKey { get; private set; }
+
+        public IEnumerable<UpdateOperation> UpdateOperations { get; private set; }
+
+        public UpdateItem(
+            string id,
+            string partitionKey,
+            IEnumerable<UpdateOperation> updateOperations)
+        {
+            this.Id = id;
+            this.PartitionKey = partitionKey;
+            this.UpdateOperations = updateOperations;
+        }
+    }
+```
+
+### List of supported field update operations
+
+* Increment
+
+Supports incrementing any numeric document field by a specific value
+```csharp
+    class IncUpdateOperation<TValue>
+    {
+        IncUpdateOperation(string field, TValue value)
+    }
+```
+
+* Set
+
+Supports setting any document field to a specific value
+```csharp
+    class SetUpdateOperation<TValue>
+    {
+        SetUpdateOperation(string field, TValue value)
+    }
+```
+
+* Unset
+
+Supports removing a specific document field along with all children fields
+```csharp
+    class UnsetUpdateOperation
+    {
+        SetUpdateOperation(string field)
+    }
+```
+
+* Array push
+
+Supports appending an array of values to a document field which contains an array
+```csharp
+    class PushUpdateOperation
+    {
+        PushUpdateOperation(string field, object[] value)
+    }
+```
+
+* Array remove
+
+Supports removing a specific value (if present) from a document field which contains an array
+```csharp
+    class RemoveUpdateOperation<TValue>
+    {
+        RemoveUpdateOperation(string field, TValue value)
+    }
+```
+
+**Note**: For nested fields, use '.' as the nesting separtor. For example, if you wish to set the '/address/city' field to 'Seattle', express as shown:
+```csharp
+    SetUpdateOperation<string> nestedPropertySetUpdate = new SetUpdateOperation<string>("address.city", "Seattle");
+```
+
+### Configurable parameters
+
+* *maxConcurrencyPerPartitionKeyRange* : The maximum degree of concurrency per partition key range, setting to null will cause library to use default value of 20.
+* *maxInMemorySortingBatchSize* : The maximum number of update items pulled from the update items enumerator passed to the API call in each stage for in-memory pre-processing sorting phase prior to bulk updating, setting to null will cause library to use default value of min(updateItems.count, 1000000).
+* *cancellationToken* : The cancellation token to gracefully exit bulk update.
+
+### Bulk update response object definition
+
+The result of the bulk update API call contains the following attributes:
+* *NumberOfDocumentsUpdated* (long) : The total number of documents which were successfully updated out of the ones supplied to the bulk update API call.
+* *TotalRequestUnitsConsumed* (double) : The total request units (RU) consumed by the bulk update API call.
+* *TotalTimeTaken* (TimeSpan) : The total time taken by the bulk update API call to complete execution.
+
+### Getting started with bulk update
+
+* Initialize DocumentClient set to Direct TCP connection mode
+```csharp
+ConnectionPolicy connectionPolicy = new ConnectionPolicy
+{
+    ConnectionMode = ConnectionMode.Direct,
+    ConnectionProtocol = Protocol.Tcp
+};
+DocumentClient client = new DocumentClient(
+    new Uri(endpointUrl),
+    authorizationKey,
+    connectionPolicy)
+```
+
+* Initialize BulkExecutor
+```csharp
+IBulkExecutor bulkExecutor = new BulkExecutor(client, dataCollection);
+await bulkExecutor.InitializeAsync();
+```
+
+* Define the update items along with corresponding field update operations
+```csharp
+ SetUpdateOperation<string> nameUpdate = new SetUpdateOperation<string>("Name", "UpdatedDoc");
+ UnsetUpdateOperation descriptionUpdate = new UnsetUpdateOperation("description");
+
+List<UpdateOperation> updateOperations = new List<UpdateOperation>();
+updateOperations.Add(nameUpdate);
+updateOperations.Add(descriptionUpdate);
+
+List<UpdateItem> updateItems = new List<UpdateItem>();
+for (int i = 0; i < 10; i++)
+{
+    updateItems.Add(new UpdateItem(i.ToString(), i.ToString(), updateOperations));
+}
+```
+
+* Call BulkUpdateAsync
+```csharp
+BulkUpdateResponse bulkUpdateResponse = await bulkExecutor.BulkUpdateAsync(
+    updateItems: updateItems,
+    maxConcurrencyPerPartitionKeyRange: null,
+    maxInMemorySortingBatchSize: null,
+    cancellationToken: token);
+```
+
+You can find the complete sample application program consuming the bulk update API [here](https://github.com/Azure/azure-cosmosdb-bulkexecutor-dotnet-getting-started/blob/master/BulkUpdateSample/BulkUpdateSample/Program.cs). You can configure the application settings in *appSettings* [here](https://github.com/Azure/azure-cosmosdb-bulkexecutor-dotnet-getting-started/blob/master/BulkUpdateSample/BulkUpdateSample/App.config).
+
+In the sample application, we first bulk import documents and then bulk update all the imported documents to set the *Name* field to a new value and unset the *description* field in each document.
+
+You can download the Microsoft.Azure.CosmosDB.BulkExecutor nuget package from [here](https://github.com/Azure/azure-cosmosdb-bulkexecutor-dotnet-getting-started/tree/master/BulkImportSample/BulkImportSample/NugetPackages).
+
+### Performance of bulk update sample
+
+When the given sample application is run on a standard DS16 v3 Azure VM in East US against a Cosmos DB collection in East US with **1 million RU/s** allocated througput - with *NumberOfDocumentsToUpdate* set to **25 million** and *NumberOfBatches* set to **25** (in *App.config*) and default parameters for the bulk update API (as well as bulk import API), we observe the following performance for bulk update:
+```csharp
+Updated 25000000 docs @ 52778 update/s, 481734 RU/s in 473.6824773 sec
+```
+
+### API implementation details
+
+The bulk update API is designed similar to bulk import - look at the implementation details of bulk import API for details.
+
+------------------------------------------
+
+## Performance tips
 
 * For best performance, run your application from an Azure VM in the same region as your Cosmos DB account write region.
 * It is advised to instantiate a single *BulkExecutor* object for the entirety of the application corresponding to a specific Cosmos DB collection.
