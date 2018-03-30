@@ -7,9 +7,8 @@ The Azure Cosmos DB BulkExecutor library for .NET acts as an extension library t
 <summary><strong><em>Table of Contents</em></strong></summary>
 
 * [Bulk Import API](#bulk-import-api)
-  * [API details](#bulk-import-api)
-    * [Configurable parameters](#bulk-import-configurations)
-    * [Bulk import response object definition](#bulk-import-response)
+  * [Configurable parameters](#bulk-import-configurations)
+  * [Bulk import response object definition](#bulk-import-response)
   * [Getting started](#bulk-import-getting-started)
   * [Performance of bulk import sample](bulk-import-performance)
   * [Client-side API implementation details](bulk-import-client-side)
@@ -17,9 +16,9 @@ The Azure Cosmos DB BulkExecutor library for .NET acts as an extension library t
 * [Contributing & Feedback](#contributing--feedback)
 * [Other relevant projects](#relevant-projects)
 
-### Bulk Import API
+</details>
 
-#### API details
+### Bulk Import API
 
 We provide two overloads of the bulk import API - one which accepts a list of JSON-serialized documents and the other a list of deserialized POCO documents.
 
@@ -45,7 +44,7 @@ We provide two overloads of the bulk import API - one which accepts a list of JS
             CancellationToken cancellationToken = default(CancellationToken));
 ```
 
-##### Configurable parameters
+#### Configurable parameters
 
 * *enableUpsert* : A flag to enable upsert of the documents, default value is false.
 * *disableAutomaticIdGeneration* : A flag to disable automatic generation of ids if absent in the docuement.
@@ -53,7 +52,7 @@ We provide two overloads of the bulk import API - one which accepts a list of JS
 * *maxInMemorySortingBatchSize* : The maximum number of documents pulled from the document enumerator passed to the API call in each stage for in-memory pre-processing sorting phase prior to bulk importing, setting to null will cause library to use default value of min(documents.count, 1000000).
 * *cancellationToken* : The cancellation token to gracefully exit bulk import.
 
-##### Bulk import response object definition
+#### Bulk import response object definition
 
 The result of the bulk import API call contains the following attributes:
 * *NumberOfDocumentsImported* (long) : The total number of documents which were successfully imported out of the documents supplied to the bulk import API call.
