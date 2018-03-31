@@ -124,11 +124,11 @@ These client-side optimizations augment server-side features specific to the Bul
 The bulk update (a.k.a patch) API accepts a list of update items - each update item specifies the list of field update operations to be performed on a document identified by an id and parititon key value.
 
 ```csharp
-        Task<BulkUpdateResponse> BulkUpdateAsync(
-            IEnumerable<UpdateItem> updateItems,
-            int? maxConcurrencyPerPartitionKeyRange = null,
-            int? maxInMemorySortingBatchSize = null,
-            CancellationToken cancellationToken = default(CancellationToken));
+    Task<BulkUpdateResponse> BulkUpdateAsync(
+        IEnumerable<UpdateItem> updateItems,
+        int? maxConcurrencyPerPartitionKeyRange = null,
+        int? maxInMemorySortingBatchSize = null,
+        CancellationToken cancellationToken = default(CancellationToken));
 ```
 
 * Definition of UpdateItem
@@ -159,50 +159,50 @@ The bulk update (a.k.a patch) API accepts a list of update items - each update i
 
 Supports incrementing any numeric document field by a specific value
 ```csharp
-    class IncUpdateOperation<TValue>
-    {
-        IncUpdateOperation(string field, TValue value)
-    }
+class IncUpdateOperation<TValue>
+{
+    IncUpdateOperation(string field, TValue value)
+}
 ```
 
 * Set
 
 Supports setting any document field to a specific value
 ```csharp
-    class SetUpdateOperation<TValue>
-    {
-        SetUpdateOperation(string field, TValue value)
-    }
+class SetUpdateOperation<TValue>
+{
+    SetUpdateOperation(string field, TValue value)
+}
 ```
 
 * Unset
 
 Supports removing a specific document field along with all children fields
 ```csharp
-    class UnsetUpdateOperation
-    {
-        SetUpdateOperation(string field)
-    }
+class UnsetUpdateOperation
+{
+    SetUpdateOperation(string field)
+}
 ```
 
 * Array push
 
 Supports appending an array of values to a document field which contains an array
 ```csharp
-    class PushUpdateOperation
-    {
-        PushUpdateOperation(string field, object[] value)
-    }
+class PushUpdateOperation
+{
+    PushUpdateOperation(string field, object[] value)
+}
 ```
 
 * Array remove
 
 Supports removing a specific value (if present) from a document field which contains an array
 ```csharp
-    class RemoveUpdateOperation<TValue>
-    {
-        RemoveUpdateOperation(string field, TValue value)
-    }
+class RemoveUpdateOperation<TValue>
+{
+    RemoveUpdateOperation(string field, TValue value)
+}
 ```
 
 **Note**: For nested fields, use '.' as the nesting separtor. For example, if you wish to set the '/address/city' field to 'Seattle', express as shown:
@@ -246,8 +246,8 @@ await bulkExecutor.InitializeAsync();
 
 * Define the update items along with corresponding field update operations
 ```csharp
- SetUpdateOperation<string> nameUpdate = new SetUpdateOperation<string>("Name", "UpdatedDoc");
- UnsetUpdateOperation descriptionUpdate = new UnsetUpdateOperation("description");
+SetUpdateOperation<string> nameUpdate = new SetUpdateOperation<string>("Name", "UpdatedDoc");
+UnsetUpdateOperation descriptionUpdate = new UnsetUpdateOperation("description");
 
 List<UpdateOperation> updateOperations = new List<UpdateOperation>();
 updateOperations.Add(nameUpdate);
@@ -290,7 +290,7 @@ The bulk update API is designed similar to bulk import - look at the implementat
 
 ## Performance tips
 
-* For best performance, run your application from an Azure VM in the same region as your Cosmos DB account write region.
+* For best performance, run your application **from an Azure VM in the same region as your Cosmos DB account write region**.
 * It is advised to instantiate a single *BulkExecutor* object for the entirety of the application corresponding to a specific Cosmos DB collection.
 * Since a single bulk operation API execution consumes a large chunk of the client machine's CPU and network IO by spawning multiple tasks internally, avoid spawning multiple concurrent tasks within your application process each executing bulk operation API calls. If a single bulk operation API call running on a single VM is unable to consume your entire collection's throughput (if your collections throughput > 1 million RU/s), preferably spin up separate VMs to concurrently execute bulk operation API calls.
 * Ensure *InitializeAsync()* is invoked after instantiating a *BulkExecutor* object to fetch the target Cosmos DB collection partition map.
