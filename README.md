@@ -112,6 +112,7 @@ Both the applications are run on a standard DS16 v3 Azure VM in East US against 
 The bulk import sample is executed with *NumberOfDocumentsToImport* set to **25 million** and *NumberOfBatches* set to **25** (in *App.config*) and default parameters for the bulk import API. The multi-threaded point write application is set up with a *DegreeOfParallelism* set to 2000 (spawns 2000 concurrent tasks) which maxes out the VM's CPU.
 
 We observe the following performance for ingestion of 25 million documents into a 1 million RU/s Cosmos DB collection:
+
 | | Time taken (sec) | Writes/second | RU/s consumed |
 | --- | --- | --- | --- |
 | Bulk import API | 301 | 83136 | 426765 |
