@@ -105,17 +105,27 @@ You can download the Microsoft.Azure.CosmosDB.BulkExecutor nuget package from [h
 
 ### Performance of bulk import sample
 
-When the given sample application is run on a standard DS16 v3 Azure VM in East US against a Cosmos DB collection in East US with **1 million RU/s** allocated througput - with *NumberOfDocumentsToImport* set to **25 million** and *NumberOfBatches* set to **25** (in *App.config*) and default parameters for the bulk import API, we observe the following performance:
-```csharp
-Inserted 25000000 docs @ 83136 writes/s, 426765 RU/s in 300.7134074 sec
-```
+Let us compare the performace of the bulk import sample [application](https://github.com/Azure/azure-cosmosdb-bulkexecutor-dotnet-getting-started/blob/master/BulkImportSample/BulkImportSample/) against a [multi-threaded application](https://github.com/Azure/azure-documentdb-dotnet/tree/master/samples/documentdb-benchmark) which utilizes point writes (CreateDocumentAsync API in DocumentClient)
+
+Both the applications are run on a standard DS16 v3 Azure VM in East US against a Cosmos DB collection in East US with 1 million RU/s allocated throughput.
+
+The bulk import sample is executed with *NumberOfDocumentsToImport* set to **25 million** and *NumberOfBatches* set to **25** (in *App.config*) and default parameters for the bulk import API. The multi-threaded point write application is set up with a *DegreeOfParallelism* set to 2000 (spawns 2000 concurrent tasks) which maxes out the VM's CPU.
+
+We observe the following performance for ingestion of 25 million documents into a 1 million RU/s Cosmos DB collection:
+| | Time taken (sec) | Writes/second | RU/s consumed |
+| --- | --- | --- | --- |
+| Bulk import API | 301 | 83136 | 426765 |
+| Multi-threaded point write | 2431 | 10280 | 72481 |
+
+As seen, we observe **8x** improvement in the write throughput using the bulk import API while providing out-of-the-box efficient handling of throttling, timeouts and transient exceptions - allowing easier scale-out by adding additional *BulkExecutor* client instances on individual VMs to achieve even greater write throughputs.
+
 ### API implementation details
 
 When a bulk import API is triggered with a batch of documents, on the client-side, they are first shuffled into buckets corresponding to their target Cosmos DB partition key range. Within each partiton key range bucket, they are broken down into mini-batches and each mini-batch of documents acts as a payload that is committed transactionally.
 
 We have built in optimizations for the concurrent execution of these mini-batches both within and across partition key ranges to maximally utilize the allocated collection throughput. We have designed an [AIMD-style congestion control](https://academic.microsoft.com/#/detail/2158700277?FORM=DACADP) mechanism for each Cosmos DB partition key range **to efficiently handle throttling and timeouts**.
 
-These client-side optimizations augment server-side features specific to the BulkExecutor library which together make it possible to maximal consumption of available throughput.
+These client-side optimizations augment server-side features specific to the BulkExecutor library which together make maximal consumption of available throughput possible.
 
 ------------------------------------------
 
@@ -277,7 +287,7 @@ You can download the Microsoft.Azure.CosmosDB.BulkExecutor nuget package from [h
 
 ### Performance of bulk update sample
 
-When the given sample application is run on a standard DS16 v3 Azure VM in East US against a Cosmos DB collection in East US with **1 million RU/s** allocated througput - with *NumberOfDocumentsToUpdate* set to **25 million** and *NumberOfBatches* set to **25** (in *App.config*) and default parameters for the bulk update API (as well as bulk import API), we observe the following performance for bulk update:
+When the given sample application is run on a standard DS16 v3 Azure VM in East US against a Cosmos DB collection in East US with **1 million RU/s** allocated throughput - with *NumberOfDocumentsToUpdate* set to **25 million** and *NumberOfBatches* set to **25** (in *App.config*) and default parameters for the bulk update API (as well as bulk import API), we observe the following performance for bulk update:
 ```csharp
 Updated 25000000 docs @ 52778 update/s, 481734 RU/s in 473.6824773 sec
 ```
