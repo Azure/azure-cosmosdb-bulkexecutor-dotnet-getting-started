@@ -6,6 +6,7 @@ The Azure Cosmos DB BulkExecutor library for .NET acts as an extension library t
 <details>
 <summary><strong><em>Table of Contents</em></strong></summary>
 
+* [Consuming the Microsoft Azure Cosmos DB BulkExecutor .NET library](#nuget)
 * [Bulk Import API](#bulk-import-api)
   * [Configurable parameters](#bulk-import-configurations)
   * [Bulk import response object definition](#bulk-import-response)
@@ -24,6 +25,10 @@ The Azure Cosmos DB BulkExecutor library for .NET acts as an extension library t
 * [Other relevant projects](#relevant-projects)
 
 </details>
+
+## Consuming the Microsoft Azure Cosmos DB BulkExecutor .NET library
+
+This project includes samples, documentation and performance tips for consuming the BulkExecutor library. You can download the official public NuGet package from [here](https://www.nuget.org/packages/Microsoft.Azure.CosmosDB.BulkExecutor/1.0.0).
 
 ## Bulk Import API
 
@@ -101,7 +106,7 @@ BulkImportResponse bulkImportResponse = await bulkExecutor.BulkImportAsync(
 
 You can find the complete sample application program consuming the bulk import API [here](https://github.com/Azure/azure-cosmosdb-bulkexecutor-dotnet-getting-started/blob/master/BulkImportSample/BulkImportSample/Program.cs) - which generates random documents to be then bulk imported into an Azure Cosmos DB collection. You can configure the application settings in *appSettings* [here](https://github.com/Azure/azure-cosmosdb-bulkexecutor-dotnet-getting-started/blob/master/BulkImportSample/BulkImportSample/App.config).
 
-You can download the Microsoft.Azure.CosmosDB.BulkExecutor nuget package from [here](https://github.com/Azure/azure-cosmosdb-bulkexecutor-dotnet-getting-started/tree/master/BulkImportSample/BulkImportSample/NugetPackages).
+You can download the Microsoft.Azure.CosmosDB.BulkExecutor nuget package from [here](https://www.nuget.org/packages/Microsoft.Azure.CosmosDB.BulkExecutor/1.0.0).
 
 ### Performance of bulk import sample
 
@@ -284,7 +289,7 @@ You can find the complete sample application program consuming the bulk update A
 
 In the sample application, we first bulk import documents and then bulk update all the imported documents to set the *Name* field to a new value and unset the *description* field in each document.
 
-You can download the Microsoft.Azure.CosmosDB.BulkExecutor nuget package from [here](https://github.com/Azure/azure-cosmosdb-bulkexecutor-dotnet-getting-started/tree/master/BulkImportSample/BulkImportSample/NugetPackages).
+You can download the Microsoft.Azure.CosmosDB.BulkExecutor nuget package from [here](https://www.nuget.org/packages/Microsoft.Azure.CosmosDB.BulkExecutor/1.0.0).
 
 ### Performance of bulk update sample
 
