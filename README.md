@@ -13,7 +13,7 @@ The Azure Cosmos DB BulkExecutor library for .NET acts as an extension library t
   * [Getting started with bulk import](#bulk-import-getting-started)
   * [Performance of bulk import sample](bulk-import-performance)
   * [API implementation details](bulk-import-client-side)
-* [Bulk Update API](#bulk-import-api)
+* [Bulk Update API](#bulk-update-api)
   * [List of supported field update operations](#field-update-operations)
   * [Configurable parameters](#bulk-update-configurations)
   * [Bulk update response object definition](#bulk-update-response)
