@@ -120,10 +120,10 @@ We observe the following performance for ingestion of 25 million documents into 
 
 | | Time taken (sec) | Writes/second | RU/s consumed |
 | --- | --- | --- | --- |
-| Bulk import API | 301 | 83136 | 426765 |
+| Bulk import API | 262 | 95528 | 494186 |
 | Multi-threaded point write | 2431 | 10280 | 72481 |
 
-As seen, we observe **8x** improvement in the write throughput using the bulk import API while providing out-of-the-box efficient handling of throttling, timeouts and transient exceptions - allowing easier scale-out by adding additional *BulkExecutor* client instances on individual VMs to achieve even greater write throughputs.
+As seen, we observe **>9x** improvement in the write throughput using the bulk import API while providing out-of-the-box efficient handling of throttling, timeouts and transient exceptions - allowing easier scale-out by adding additional *BulkExecutor* client instances on individual VMs to achieve even greater write throughputs.
 
 ### API implementation details
 
