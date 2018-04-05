@@ -28,7 +28,7 @@ The Azure Cosmos DB BulkExecutor library for .NET acts as an extension library t
 
 ## Consuming the Microsoft Azure Cosmos DB BulkExecutor .NET library
 
-This project includes samples, documentation and performance tips for consuming the BulkExecutor library. You can download the official public NuGet package from [here](https://www.nuget.org/packages/Microsoft.Azure.CosmosDB.BulkExecutor/1.0.0).
+This project includes samples, documentation and performance tips for consuming the BulkExecutor library. You can download the official public NuGet package from [here](https://www.nuget.org/packages/Microsoft.Azure.CosmosDB.BulkExecutor/).
 
 ## Bulk Import API
 
@@ -106,7 +106,7 @@ BulkImportResponse bulkImportResponse = await bulkExecutor.BulkImportAsync(
 
 You can find the complete sample application program consuming the bulk import API [here](https://github.com/Azure/azure-cosmosdb-bulkexecutor-dotnet-getting-started/blob/master/BulkImportSample/BulkImportSample/Program.cs) - which generates random documents to be then bulk imported into an Azure Cosmos DB collection. You can configure the application settings in *appSettings* [here](https://github.com/Azure/azure-cosmosdb-bulkexecutor-dotnet-getting-started/blob/master/BulkImportSample/BulkImportSample/App.config).
 
-You can download the Microsoft.Azure.CosmosDB.BulkExecutor nuget package from [here](https://www.nuget.org/packages/Microsoft.Azure.CosmosDB.BulkExecutor/1.0.0).
+You can download the Microsoft.Azure.CosmosDB.BulkExecutor nuget package from [here](https://www.nuget.org/packages/Microsoft.Azure.CosmosDB.BulkExecutor/).
 
 ### Performance of bulk import sample
 
@@ -116,7 +116,7 @@ Both the applications are run on a standard DS16 v3 Azure VM in East US against 
 
 The bulk import sample is executed with *NumberOfDocumentsToImport* set to **25 million** and *NumberOfBatches* set to **25** (in *App.config*) and default parameters for the bulk import API. The multi-threaded point write application is set up with a *DegreeOfParallelism* set to 2000 (spawns 2000 concurrent tasks) which maxes out the VM's CPU.
 
-We observe the following performance for ingestion of 25 million documents into a 1 million RU/s Cosmos DB collection:
+We observe the following performance for ingestion of 25 million (~1KB) documents into a 1 million RU/s Cosmos DB collection:
 
 | | Time taken (sec) | Writes/second | RU/s consumed |
 | --- | --- | --- | --- |
@@ -289,13 +289,13 @@ You can find the complete sample application program consuming the bulk update A
 
 In the sample application, we first bulk import documents and then bulk update all the imported documents to set the *Name* field to a new value and unset the *description* field in each document.
 
-You can download the Microsoft.Azure.CosmosDB.BulkExecutor nuget package from [here](https://www.nuget.org/packages/Microsoft.Azure.CosmosDB.BulkExecutor/1.0.0).
+You can download the Microsoft.Azure.CosmosDB.BulkExecutor nuget package from [here](https://www.nuget.org/packages/Microsoft.Azure.CosmosDB.BulkExecutor/).
 
 ### Performance of bulk update sample
 
 When the given sample application is run on a standard DS16 v3 Azure VM in East US against a Cosmos DB collection in East US with **1 million RU/s** allocated throughput - with *NumberOfDocumentsToUpdate* set to **25 million** and *NumberOfBatches* set to **25** (in *App.config*) and default parameters for the bulk update API (as well as bulk import API), we observe the following performance for bulk update:
 ```csharp
-Updated 25000000 docs @ 52778 update/s, 481734 RU/s in 473.6824773 sec
+Updated 25000000 docs @ 53796 update/s, 491681 RU/s in 464.7 sec
 ```
 
 ### API implementation details
