@@ -87,10 +87,18 @@ DocumentClient client = new DocumentClient(
     connectionPolicy)
 ```
 
-* Initialize BulkExecutor
+* Initialize BulkExecutor with high retry option values for the client SDK and then set to 0 to pass congestion control to BulkExector
 ```csharp
+// Set retry options high during initialization (default values).
+client.ConnectionPolicy.RetryOptions.MaxRetryWaitTimeInSeconds = 30;
+client.ConnectionPolicy.RetryOptions.MaxRetryAttemptsOnThrottledRequests = 9;
+
 IBulkExecutor bulkExecutor = new BulkExecutor(client, dataCollection);
 await bulkExecutor.InitializeAsync();
+
+// Set retries to 0 to pass complete control to bulk executor.
+client.ConnectionPolicy.RetryOptions.MaxRetryWaitTimeInSeconds = 0;
+client.ConnectionPolicy.RetryOptions.MaxRetryAttemptsOnThrottledRequests = 0;
 ```
 
 * Call BulkImportAsync
@@ -254,10 +262,18 @@ DocumentClient client = new DocumentClient(
     connectionPolicy)
 ```
 
-* Initialize BulkExecutor
+* Initialize BulkExecutor with high retry option values for the client SDK and then set to 0 to pass congestion control to BulkExector
 ```csharp
+// Set retry options high during initialization (default values).
+client.ConnectionPolicy.RetryOptions.MaxRetryWaitTimeInSeconds = 30;
+client.ConnectionPolicy.RetryOptions.MaxRetryAttemptsOnThrottledRequests = 9;
+
 IBulkExecutor bulkExecutor = new BulkExecutor(client, dataCollection);
 await bulkExecutor.InitializeAsync();
+
+// Set retries to 0 to pass complete control to bulk executor.
+client.ConnectionPolicy.RetryOptions.MaxRetryWaitTimeInSeconds = 0;
+client.ConnectionPolicy.RetryOptions.MaxRetryAttemptsOnThrottledRequests = 0;
 ```
 
 * Define the update items along with corresponding field update operations
