@@ -87,7 +87,7 @@ DocumentClient client = new DocumentClient(
     connectionPolicy)
 ```
 
-* Initialize BulkExecutor with high retry option values for the client SDK and then set to 0 to pass congestion control to BulkExector
+* Initialize BulkExecutor with high retry option values for the client SDK and then set to 0 to pass congestion control to BulkExector for its lifetime
 ```csharp
 // Set retry options high during initialization (default values).
 client.ConnectionPolicy.RetryOptions.MaxRetryWaitTimeInSeconds = 30;
@@ -262,7 +262,7 @@ DocumentClient client = new DocumentClient(
     connectionPolicy)
 ```
 
-* Initialize BulkExecutor with high retry option values for the client SDK and then set to 0 to pass congestion control to BulkExector
+* Initialize BulkExecutor with high retry option values for the client SDK and then set to 0 to pass congestion control to BulkExector for its lifetime
 ```csharp
 // Set retry options high during initialization (default values).
 client.ConnectionPolicy.RetryOptions.MaxRetryWaitTimeInSeconds = 30;
