@@ -6,23 +6,23 @@ The Azure Cosmos DB BulkExecutor library for .NET acts as an extension library t
 <details>
 <summary><strong><em>Table of Contents</em></strong></summary>
 
-* [Consuming the Microsoft Azure Cosmos DB BulkExecutor .NET library](#nuget)
-* [Bulk Import API](#bulk-import-api)
-  * [Configurable parameters](#bulk-import-configurations)
-  * [Bulk import response object definition](#bulk-import-response)
-  * [Getting started with bulk import](#bulk-import-getting-started)
-  * [Performance of bulk import sample](bulk-import-performance)
-  * [API implementation details](bulk-import-client-side)
-* [Bulk Update API](#bulk-update-api)
-  * [List of supported field update operations](#field-update-operations)
-  * [Configurable parameters](#bulk-update-configurations)
-  * [Bulk update response object definition](#bulk-update-response)
-  * [Getting started with bulk update](#bulk-update-getting-started)
-  * [Performance of bulk update sample](bulk-update-performance)
-  * [API implementation details](bulk-update-client-side)
-* [Performance tips](#additional-pointers)
-* [Contributing & Feedback](#contributing--feedback)
-* [Other relevant projects](#relevant-projects)
+- [Consuming the Microsoft Azure Cosmos DB BulkExecutor .NET library](#nuget)
+- [Bulk Import API](#bulk-import-api)
+    - [Configurable parameters](#bulk-import-configurations)
+    - [Bulk import response object definition](#bulk-import-response)
+    - [Getting started with bulk import](#bulk-import-getting-started)
+    - [Performance of bulk import sample](bulk-import-performance)
+    - [API implementation details](bulk-import-client-side)
+- [Bulk Update API](#bulk-update-api)
+    - [List of supported field update operations](#field-update-operations)
+    - [Configurable parameters](#bulk-update-configurations)
+    - [Bulk update response object definition](#bulk-update-response)
+    - [Getting started with bulk update](#bulk-update-getting-started)
+    - [Performance of bulk update sample](bulk-update-performance)
+    - [API implementation details](bulk-update-client-side)
+- [Performance tips](#additional-pointers)
+- [Contributing & Feedback](#contributing--feedback)
+- [Other relevant projects](#relevant-projects)
 
 </details>
 
@@ -101,7 +101,7 @@ client.ConnectionPolicy.RetryOptions.MaxRetryWaitTimeInSeconds = 0;
 client.ConnectionPolicy.RetryOptions.MaxRetryAttemptsOnThrottledRequests = 0;
 ```
 
-* Call BulkImportAsync
+* Call BulkImportAsync API
 ```csharp
 BulkImportResponse bulkImportResponse = await bulkExecutor.BulkImportAsync(
     documents: documentsToImportInBatch,
@@ -292,7 +292,7 @@ for (int i = 0; i < 10; i++)
 }
 ```
 
-* Call BulkUpdateAsync
+* Call BulkUpdateAsync API
 ```csharp
 BulkUpdateResponse bulkUpdateResponse = await bulkExecutor.BulkUpdateAsync(
     updateItems: updateItems,
@@ -323,8 +323,8 @@ The bulk update API is designed similar to bulk import - look at the implementat
 ## Performance tips
 
 * For best performance, run your application **from an Azure VM in the same region as your Cosmos DB account write region**.
-* It is advised to instantiate a single *BulkExecutor* object for the entirety of the application corresponding to a specific Cosmos DB collection.
-* Since a single bulk operation API execution consumes a large chunk of the client machine's CPU and network IO by spawning multiple tasks internally, avoid spawning multiple concurrent tasks within your application process each executing bulk operation API calls. If a single bulk operation API call running on a single VM is unable to consume your entire collection's throughput (if your collections throughput > 1 million RU/s), preferably spin up separate VMs to concurrently execute bulk operation API calls.
+* It is advised to instantiate a single *BulkExecutor* object for the entirety of the application within a single VM corresponding to a specific Cosmos DB collection.
+* Since a single bulk operation API execution consumes a large chunk of the client machine's CPU and network IO by spawning multiple tasks internally, avoid spawning multiple concurrent tasks within your application process each executing bulk operation API calls. If a single bulk operation API call running on a single VM is unable to consume your entire collection's throughput (if your collection's throughput > 1 million RU/s), preferably spin up separate VMs to concurrently execute bulk operation API calls.
 * Ensure *InitializeAsync()* is invoked after instantiating a *BulkExecutor* object to fetch the target Cosmos DB collection partition map.
 * In your application's *App.Config*, ensure **gcServer** is enabled for better performance
 ```csharp
