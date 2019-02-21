@@ -320,6 +320,81 @@ The bulk update API is designed similar to bulk import - look at the implementat
 
 ------------------------------------------
 
+## Bulk Delete API
+
+The bulk delete API accepts a list of <partitionKey, documentId> tuples to delete in bulk.
+
+```csharp
+    Task<BulkDeleteResponse> BulkDeleteAsync(
+        List<Tuple<string, string>> pkIdTuplesToDelete,
+        int? deleteBatchSize = null,
+        CancellationToken cancellationToken = default(CancellationToken));
+```
+
+### Configurable parameters
+
+* *deleteBatchSize* : The maximum number delete items to execute transactionally, setting to null will cause library to use default value of 1000.
+* *cancellationToken* : The cancellation token to gracefully exit bulk delete.
+
+### Bulk delete response object definition
+
+The result of the bulk delete API call contains the following attributes:
+* *NumberOfDocumentsDeleted* (long) : The total number of documents which were successfully deleted out of the ones supplied to the bulk delete API call.
+* *TotalRequestUnitsConsumed* (double) : The total request units (RU) consumed by the bulk delete API call.
+* *TotalTimeTaken* (TimeSpan) : The total time taken by the bulk delete API call to complete execution.
+
+
+### Getting started with bulk delete
+
+* Initialize DocumentClient set to Direct TCP connection mode
+```csharp
+ConnectionPolicy connectionPolicy = new ConnectionPolicy
+{
+    ConnectionMode = ConnectionMode.Direct,
+    ConnectionProtocol = Protocol.Tcp
+};
+DocumentClient client = new DocumentClient(
+    new Uri(endpointUrl),
+    authorizationKey,
+    connectionPolicy)
+```
+
+* Initialize BulkExecutor with high retry option values for the client SDK and then set to 0 to pass congestion control to BulkExector for its lifetime
+```csharp
+// Set retry options high during initialization (default values).
+client.ConnectionPolicy.RetryOptions.MaxRetryWaitTimeInSeconds = 30;
+client.ConnectionPolicy.RetryOptions.MaxRetryAttemptsOnThrottledRequests = 9;
+
+BulkExecutor bulkExecutor = new BulkExecutor(client, dataCollection);
+await bulkExecutor.InitializeAsync();
+
+// Set retries to 0 to pass complete control to bulk executor.
+client.ConnectionPolicy.RetryOptions.MaxRetryWaitTimeInSeconds = 0;
+client.ConnectionPolicy.RetryOptions.MaxRetryAttemptsOnThrottledRequests = 0;
+```
+
+* Define the list of <PartitionKey, DocumentId> tuples to delete
+```csharp
+List<Tuple<string, string>> pkIdTuplesToDelete = new List<Tuple<string, string>>();
+for(int i=0; i < NumberOfDocumentsToDelete; i++)
+{
+    pkIdTuplesToDelete.Add(new Tuple<string, string>(i.ToString(), i.ToString()));
+}
+```
+
+* Call BulkDeleteAsync API
+```csharp
+BulkDeleteResponse bulkDeleteResponse = await bulkExecutor.BulkDeleteAsync(pkIdTuplesToDelete);
+```
+
+You can find the complete sample application program consuming the bulk delete API [here](https://github.com/Azure/azure-cosmosdb-bulkexecutor-dotnet-getting-started/blob/master/BulkDeleteSample/BulkDeleteSample/Program.cs). You can configure the application settings in *appSettings* [here](https://github.com/Azure/azure-cosmosdb-bulkexecutor-dotnet-getting-started/blob/master/BulkDeleteSample/BulkDeleteSample/App.config).
+
+In the sample application, we first bulk import documents and then bulk delete a portion of the imported documents.
+
+You can download the Microsoft.Azure.CosmosDB.BulkExecutor nuget package from [here](https://www.nuget.org/packages/Microsoft.Azure.CosmosDB.BulkExecutor/).
+
+------------------------------------------
+
 ## Performance tips
 
 * For best performance, run your application **from an Azure VM in the same region as your Cosmos DB account write region**.
