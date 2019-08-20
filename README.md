@@ -205,7 +205,7 @@ Supports removing a specific document field along with all children fields
 ```csharp
 class UnsetUpdateOperation
 {
-    SetUpdateOperation(string field)
+    UnsetUpdateOperation(string field)
 }
 ```
 
