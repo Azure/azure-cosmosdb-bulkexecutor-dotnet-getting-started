@@ -36,24 +36,24 @@ We provide two overloads of the bulk import API - one which accepts a list of JS
 
 * With list of JSON-serialized documents
 ```csharp
-        Task<BulkImportResponse> BulkImportAsync(
-            IEnumerable<string> documents,
-            bool enableUpsert = false,
-            bool disableAutomaticIdGeneration = true,
-            int? maxConcurrencyPerPartitionKeyRange = null,
-            int? maxInMemorySortingBatchSize = null,
-            CancellationToken cancellationToken = default(CancellationToken));
+Task<BulkImportResponse> BulkImportAsync(
+    IEnumerable<string> documents,
+    bool enableUpsert = false,
+    bool disableAutomaticIdGeneration = true,
+    int? maxConcurrencyPerPartitionKeyRange = null,
+    int? maxInMemorySortingBatchSize = null,
+    CancellationToken cancellationToken = default(CancellationToken));
 ```
 
 * With list of deserialized POCO documents
 ```csharp
-        Task<BulkImportResponse> BulkImportAsync(
-            IEnumerable<object> documents,
-            bool enableUpsert = false,
-            bool disableAutomaticIdGeneration = true,
-            int? maxConcurrencyPerPartitionKeyRange = null,
-            int? maxInMemorySortingBatchSize = null,
-            CancellationToken cancellationToken = default(CancellationToken));
+Task<BulkImportResponse> BulkImportAsync(
+    IEnumerable<object> documents,
+    bool enableUpsert = false,
+    bool disableAutomaticIdGeneration = true,
+    int? maxConcurrencyPerPartitionKeyRange = null,
+    int? maxInMemorySortingBatchSize = null,
+    CancellationToken cancellationToken = default(CancellationToken));
 ```
 
 ### Configurable parameters
@@ -148,33 +148,33 @@ These client-side optimizations augment server-side features specific to the Bul
 The bulk update (a.k.a patch) API accepts a list of update items - each update item specifies the list of field update operations to be performed on a document identified by an id and parititon key value.
 
 ```csharp
-    Task<BulkUpdateResponse> BulkUpdateAsync(
-        IEnumerable<UpdateItem> updateItems,
-        int? maxConcurrencyPerPartitionKeyRange = null,
-        int? maxInMemorySortingBatchSize = null,
-        CancellationToken cancellationToken = default(CancellationToken));
+Task<BulkUpdateResponse> BulkUpdateAsync(
+    IEnumerable<UpdateItem> updateItems,
+    int? maxConcurrencyPerPartitionKeyRange = null,
+    int? maxInMemorySortingBatchSize = null,
+    CancellationToken cancellationToken = default(CancellationToken));
 ```
 
 * Definition of UpdateItem
 ```csharp
-    class UpdateItem
+class UpdateItem
+{
+    public string Id { get; private set; }
+
+    public string PartitionKey { get; private set; }
+
+    public IEnumerable<UpdateOperation> UpdateOperations { get; private set; }
+
+    public UpdateItem(
+        string id,
+        string partitionKey,
+        IEnumerable<UpdateOperation> updateOperations)
     {
-        public string Id { get; private set; }
-
-        public string PartitionKey { get; private set; }
-
-        public IEnumerable<UpdateOperation> UpdateOperations { get; private set; }
-
-        public UpdateItem(
-            string id,
-            string partitionKey,
-            IEnumerable<UpdateOperation> updateOperations)
-        {
-            this.Id = id;
-            this.PartitionKey = partitionKey;
-            this.UpdateOperations = updateOperations;
-        }
+        this.Id = id;
+        this.PartitionKey = partitionKey;
+        this.UpdateOperations = updateOperations;
     }
+}
 ```
 
 ### List of supported field update operations
@@ -231,7 +231,7 @@ class RemoveUpdateOperation<TValue>
 
 **Note**: For nested fields, use '.' as the nesting separtor. For example, if you wish to set the '/address/city' field to 'Seattle', express as shown:
 ```csharp
-    SetUpdateOperation<string> nestedPropertySetUpdate = new SetUpdateOperation<string>("address.city", "Seattle");
+SetUpdateOperation<string> nestedPropertySetUpdate = new SetUpdateOperation<string>("address.city", "Seattle");
 ```
 
 ### Configurable parameters
@@ -325,10 +325,10 @@ The bulk update API is designed similar to bulk import - look at the implementat
 The bulk delete API accepts a list of <partitionKey, documentId> tuples to delete in bulk.
 
 ```csharp
-    Task<BulkDeleteResponse> BulkDeleteAsync(
-        List<Tuple<string, string>> pkIdTuplesToDelete,
-        int? deleteBatchSize = null,
-        CancellationToken cancellationToken = default(CancellationToken));
+Task<BulkDeleteResponse> BulkDeleteAsync(
+    List<Tuple<string, string>> pkIdTuplesToDelete,
+    int? deleteBatchSize = null,
+    CancellationToken cancellationToken = default(CancellationToken));
 ```
 
 ### Configurable parameters
